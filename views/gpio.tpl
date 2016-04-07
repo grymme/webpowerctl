@@ -11,7 +11,6 @@
             <tr><td> <h1>GPIO settings for power control</h1></td></tr>
         </table>
         <p><br></p>       
-        % print('Template :' + str(gpio))
         <form action="/gpio" method="post">
         <table class="ButtonTable">
         <tbody>
@@ -24,7 +23,6 @@
                     <td>
                         <div class="switch">
                             <input type="checkbox" id="{{button[1]}}" name="powerbutton[{{x}}]" value="True" 
-                        % print("X is " + str(x) + ", " + gpio[x])
                         % if gpio[x] == "True":
                         checked
                         % end
