@@ -5,6 +5,8 @@ import os
 import gpio_object
 import wiringpi
 
+gpio_pin_map = [2, 3, 4, 17, 27, 22]
+
 class gpio():
     """
     GPIO settings
@@ -14,18 +16,18 @@ class gpio():
         self.gpio = gpio_object.gpio_object(size)
         self.size = size
         # Initialize
-        wiringpi.wiringPiSetup()
+        wiringpi.wiringPiSetupGpio()
         # Set as output HIGH
         for port in range(self.size):
-            wiringpi.pinMode(port, 1)
-            wiringpi.digitalWrite(port, 1)
+            wiringpi.pinMode(gpio_pin_map[port], 1)
+            wiringpi.digitalWrite(gpio_pin_map[port], 1)
         # wiringpi.pullUpDnControl(pin_or_port_num, 2)
 
     def __del__(self):
         # Clean up GPIO states. Set ports to LOW and input
         for port in range(self.size):
-            wiringpi.digitalWrite(port, 0)
-            wiringpi.pinMode(port, 0)
+            wiringpi.digitalWrite(gpio_pin_map[port], 0)
+            wiringpi.pinMode(gpio_pin_map[port], 0)
 
     def get_str(self):
         return (self.gpio.get_str())
@@ -37,9 +39,9 @@ class gpio():
         port = 0
         for state in list:
             if state:
-                wiringpi.digitalWrite(port, 1)
+                wiringpi.digitalWrite(gpio_pin_map[port], 0)
             else:
-                wiringpi.digitalWrite(port, 0)
+                wiringpi.digitalWrite(gpio_pin_map[port], 1)
             port += 1
         return (result)
 
