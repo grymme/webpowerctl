@@ -26,11 +26,11 @@ class gpio_object:
 
     def get_str(self):
         gpio_str = ""
-        print("gpio_obj get_str in :" + str(self.gpio))
+        #print("gpio_obj get_str in :" + str(self.gpio))
         for res in self.gpio:
             gpio_str += str(res) + ', '
             print(res)
-        print("gpio_obj get_str out :" + gpio_str)
+        #print("gpio_obj get_str out :" + gpio_str)
         return (gpio_str)
 
     def set(self, gpio_list):
@@ -44,13 +44,13 @@ class gpio_object:
 
     def set_str(self, gpio_str):
         status = True
-        print("gpio_obj set_str :" + gpio_str)
+        #print("gpio_obj set_str :" + gpio_str)
         gpio_list = gpio_str.split(', ')
         for x in range(self.size):
             try:
                 self.gpio[x] = bool(gpio_list[x] == "True")
-                print(self.gpio_list[x] + '! ', end="")
-                print(self.gpio[x])
+                #print(self.gpio_list[x] + '! ', end="")
+                #print(self.gpio[x])
             except:
                 status = False
         return (status)

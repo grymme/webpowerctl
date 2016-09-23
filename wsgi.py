@@ -2,15 +2,29 @@ import socket
 import bottle
 import os
 import gpio_object
+import picamera
+from io import BytesIO
 
 from bottle import route, template, request, response, abort, post, get, debug, static_file
 
 switch_array = [[0, 'TrainSwitch 2', True], [1, 'Vechicle switch 1', True], [2, 'Vechicle switch 2', True], [3, 'Vechicle switch 3', True], [4, 'Vechicle switch 4', True]]
 
-gpio_array = [1, 2, 3, 4, 5] # GPIOs used
-sock_file = "/tmp/gpio_socket"
+gpio_array  = [1, 2, 3, 4, 5] # GPIOs used
+sock_file   = "/tmp/gpio_socket"
+DCAM_FILE   = "/home/pi/www/train/static/cam.jpg"
+CAPT_DCAM   = "/usr/bin/raspistill -t 10 -w 1024 -h 768 -o " + DCAM_FILE 
 
 gp_obj = gpio_object.gpio_object(5)
+pi_camera = picamera.PiCamera()
+
+
+def update_camera():
+    #p1 = subprocess.Popen(CAPT_DCAM, shell=True, cwd="/run/shm", stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    #p1.wait() 
+    #print(p1.stdout)
+    #p1.stdout.close()
+    os.system(CAPT_DCAM)
+    time.sleep(2)
 
 def send_gpio_cmd(cmd):
     status = ""
@@ -83,10 +97,16 @@ def show_ip():
 
 @route('/gpio')
 def show_gpio():
-    server_ip = get_network_ip()
+    #update_camera()
+    #server_ip = get_network_ip()
     status, resp = get_gpio_status()
+    if status is True:
+        gpio_state = resp.split(', ')
+    else:
+        gpio_state = []
+        for i in range(NUM_GPIOS_USED):
+            gpio_state.append(True)
 
-    gpio_state = resp.split(', ')
     values = {}
     values['buttons'] = switch_array
     values['result'] = "No data sent"
@@ -97,7 +117,8 @@ def show_gpio():
 
 @post('/gpio')
 def do_gpio():
-    server_ip = get_network_ip()
+    #update_camera()
+    #server_ip = get_network_ip()
     chk_0 = str(request.forms.get('powerbutton[0]') == "True")
     chk_1 = str(request.forms.get('powerbutton[1]') == "True")
     chk_2 = str(request.forms.get('powerbutton[2]') == "True")
@@ -110,19 +131,19 @@ def do_gpio():
     gpio_state.append(chk_3)
     gpio_state.append(chk_4)
     gpio_set_string = chk_0 +', '+ chk_1 +', '+ chk_2 +', '+ chk_3 +', '+ chk_4
-    print("GPIO set string: " + gpio_set_string)
+    #print("GPIO set string: " + gpio_set_string)
     status, resp1 = set_gpio(gpio_set_string)
     if status == True:
         status, resp2 = get_gpio_status()
-        print("get_gpio_status() ", status, end =", resp :")
-        print(resp2)
+        #print("get_gpio_status() ", status, end =", resp :")
+        #print(resp2)
         gpio_state = resp2.split(', ')
-        print(resp2, gpio_state)
+        #print(resp2, gpio_state)
     else:
         status = False
         resp2 = 'Failed to get GPIO status'
    
-    print(gpio_state, len(gpio_state))
+    #print(gpio_state, len(gpio_state))
     values = {}
     values['buttons'] = switch_array
     values['result'] = "button pressed: " + chk_0 +', '+ chk_1 +', '+ chk_2 +', '+ chk_3 +', '+ chk_4 
@@ -134,10 +155,21 @@ def do_gpio():
 def static(path):
         return static_file(path, root='static')
 
+@route('/camera')
+def video_image():
+    image_buffer = BytesIO()
+    pi_camera.capture(image_buffer, format='jpeg') # This works without a problem
+
+    image_buffer.seek(0) # this may not be needed
+    bytes = image_buffer.read()
+    response.set_header('Content-type', 'image/jpeg')
+    return bytes
+
+
 debug(True)
 # Run bottle internal test server when invoked directly ie: non-uxsgi mode
 if __name__ == '__main__':
-    bottle.run(host='0.0.0.0', port=80)
+    bottle.run(host='0.0.0.0', port=8080)
 # Run bottle in application mode. Required in order to get the application working with uWSGI!
 else:
     app = application = bottle.default_app()

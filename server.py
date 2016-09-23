@@ -20,7 +20,7 @@ class gpio():
         # Set as output HIGH
         for port in range(self.size):
             wiringpi.pinMode(gpio_pin_map[port], 1)
-            wiringpi.digitalWrite(gpio_pin_map[port], 1)
+            wiringpi.digitalWrite(gpio_pin_map[port], 0)
         # wiringpi.pullUpDnControl(pin_or_port_num, 2)
 
     def __del__(self):
@@ -39,9 +39,9 @@ class gpio():
         port = 0
         for state in list:
             if state:
-                wiringpi.digitalWrite(gpio_pin_map[port], 0)
-            else:
                 wiringpi.digitalWrite(gpio_pin_map[port], 1)
+            else:
+                wiringpi.digitalWrite(gpio_pin_map[port], 0)
             port += 1
         return (result)
 
@@ -49,14 +49,14 @@ def handle_cmd(socket, cmd, gpio):
     cmd_array = cmd.split(', ')
     if cmd_array[0] == "GPIO_GET":
         response = gpio.get_str()
-        print("server get in : ", cmd)
-        print("server get out: ", response)
+        #print("server get in : ", cmd)
+        #print("server get out: ", response)
         socket.send(response.encode('utf-8'))
     elif cmd_array[0] == "GPIO_SET":
         gpio.set_str(cmd[cmd.find(',')+2:])
         response = gpio.get_str()
-        print("server set in : ", cmd)
-        print("server set out: ", response)
+        #print("server set in : ", cmd)
+        #print("server set out: ", response)
         socket.send(response.encode('utf-8'))
     else:
         response = "ERROR"
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     if os.path.exists(sock_file):
         os.remove(sock_file)
 
-    print("Opening socket...")
+    print("GPIO Server opening socket...")
     backlog = 5
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(sock_file)
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     os.chown(sock_file, uid, gid) 
 
     server.listen(backlog)
-    print("Listening...")
+    print("GPIO Server listening...")
     try:
         while True:
             client, address = server.accept()
@@ -87,8 +87,8 @@ if __name__ == '__main__':
                 break
             else:
                 cmd = datagram.decode('utf-8')
-                print("-" * 20)
-                print(cmd)
+                #print("-" * 20)
+                #print(cmd)
                 if "DONE" == cmd:
                     break
                 handle_cmd(client, cmd, gpio)
@@ -96,8 +96,8 @@ if __name__ == '__main__':
     except KeyboardInterrupt as k:
         print("CTRL + C \n")
 
-    print("-" * 20)
-    print("Shutting down...")
+    #print("-" * 20)
+    print("GPIO Server shutting down...")
     server.close()
     os.remove("/tmp/gpio_socket")
-    print("Done")
+    #print("Done")
